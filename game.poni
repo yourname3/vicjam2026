@@ -1,6 +1,7 @@
 class Textures {
     let horse = load_texture("tex/horse.png");
     let apple = load_texture("tex/apple.png");
+    let carrot = load_texture("tex/carrot.png");
 }
 
 let screen_size = (256 * 16, 256 * 12);
@@ -54,7 +55,7 @@ fun update_dt(dt: float) {
 
     for i in 0..8 {
         for j in 0..8 {
-            draw_texture(tex.apple, (i * 256, j * 256), (#ffff));
+            draw_texture(if (i + j) % 2 == 0 { tex.apple } else { tex.carrot }, (i * 256, j * 256), (#ffff));
         }
     }
 
