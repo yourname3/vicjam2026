@@ -3,6 +3,7 @@ class Screen {
     var offset: vec2 = (0, 0);
     var scale: float = 1;
 
+    var target_offset: vec2 = (0, 0);
     var target_size: vec2 = (240, 180);
 
     let camera = new Camera2D {
@@ -25,7 +26,7 @@ class Screen {
     }
 
     fun draw_bg() {
-        draw_rectangle(-target_size / 2, target_size, (#111f));
+        draw_rectangle((-target_size / 2) - target_offset, target_size, (#111f));
     }
 
     fun update() {
@@ -36,8 +37,8 @@ class Screen {
         scale = best;
 
         camera.zoom = (2.0, 2.0) / target_size;
-        camera.offset = (0.0, 0);
-        camera.target = (0, 0);
+        camera.offset = (0, 0);
+        camera.target = -target_offset;
 
         let viewport = camera.viewport.or_panic();
         viewport.offset = (screen_size - (target_size * scale)) * 0.5;

@@ -2,8 +2,13 @@ class Textures {
     let horse = load_texture("tex/horse.png");
 }
 
+let screen_size = (16 * 8, 16 * 6);
+
 let tex = (new Textures{}, _init_flag).0;
-let screen = new Screen{};
+let screen = new Screen {
+    target_size: screen_size,
+    target_offset: -screen_size / 2,
+};
 
 var avg_dt = 0.003;
 
@@ -41,6 +46,10 @@ fun update() {
     update_dt(dt);
 }
 
+//var pos: float = 0;
 fun update_dt(dt: float) {
-    draw_texture(tex.horse, (20, 20), (#ffff));
+    //print(pos);
+    draw_texture(tex.horse, (0, 0) - (8, 8), (#ffff));
+
+    //pos += dt;
 }
