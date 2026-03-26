@@ -1,8 +1,9 @@
 class Textures {
     let horse = load_texture("tex/horse.png");
+    let apple = load_texture("tex/apple.png");
 }
 
-let screen_size = (16 * 8, 16 * 6);
+let screen_size = (256 * 16, 256 * 12);
 
 let tex = (new Textures{}, _init_flag).0;
 let screen = new Screen {
@@ -15,7 +16,7 @@ var avg_dt = 0.003;
 let _init_flag: bool = initialize();
 
 fun initialize() -> bool {
-    set_default_filter_mode(FILTER_NEAREST);
+    //set_default_filter_mode(FILTER_NEAREST);
 
     true
 }
@@ -51,5 +52,13 @@ fun update_dt(dt: float) {
     //print(pos);
     draw_texture(tex.horse, (0, 0) - (8, 8), (#ffff));
 
+    for i in 0..8 {
+        for j in 0..8 {
+            draw_texture(tex.apple, (i * 256, j * 256), (#ffff));
+        }
+    }
+
+
+    
     //pos += dt;
 }
