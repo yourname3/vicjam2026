@@ -1,4 +1,19 @@
+class Textures {
+    let horse = load_texture("tex/horse.png");
+}
+
+let tex = (new Textures{}, _init_flag).0;
+let screen = new Screen{};
+
 var avg_dt = 0.003;
+
+let _init_flag: bool = initialize();
+
+fun initialize() -> bool {
+    set_default_filter_mode(FILTER_NEAREST);
+
+    true
+}
 
 fun compute_dt() -> float {
     var dt = get_frame_time();
@@ -17,9 +32,15 @@ fun compute_dt() -> float {
 fun update() {
     // Black background for letter box
     clear_background((#000f));
+
+    screen.update();
+    screen.draw_bg();
     
     // Handle game logic
     var dt = compute_dt();
-   
+    update_dt(dt);
+}
 
+fun update_dt(dt: float) {
+    draw_texture(tex.horse, (20, 20), (#ffff));
 }

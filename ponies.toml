@@ -1,6 +1,7 @@
 [projects.game]
 files = [
-    "game.poni"
+    "game.poni",
+    "screen.poni"
 ]
 imports = []
 kind = "Ponyquad"
