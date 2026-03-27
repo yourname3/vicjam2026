@@ -58,16 +58,35 @@ class Button {
 
 class Ui {
 
-    var buttons = [
-        new Button {
-            tex: tex.add_horse,
-            pos: (0, 0),
+    // TODO:
+    //
+    // Initializing buttons at top level causes a variable init cycle.
+    // I guess because we're too conservative?
+    //
+    // Not sure the best way around that.
+    fun init_buttons() {
+        buttons = [
+            new Button {
+                tex: tex.add_horse,
+                pos: (0, 0),
 
-            callback: fun() {
-                print("button pressed!");
+                callback: fun() {
+                    // Look for a new horse location
+                    for x in 0..grid.size.x {
+                        for y in 0..grid.size.y {
+                            var cell = grid.get((x, y)).or_panic();
+                            if cell.type == E_AIR {
+                                place_horse_on((x, y));
+                                return;
+                            }
+                        }
+                    }
+                }
             }
-        }
-    ];
+        ];
+    }
+
+    var buttons: Array[Button] = [];
 
     fun update(dt: float) {
         for i in 0..buttons.length {
