@@ -48,18 +48,84 @@ fun update() {
     update_dt(dt);
 }
 
-//var pos: float = 0;
-fun update_dt(dt: float) {
-    //print(pos);
-    draw_texture(tex.horse, (0, 0) - (8, 8), (#ffff));
+let E_AIR   : int = 0;
+let E_HORSE : int = 1;
+let E_APPLE : int = 2;
+let E_CARROT: int = 3;
 
-    for i in 0..8 {
-        for j in 0..8 {
-            draw_texture(if (i + j) % 2 == 0 { tex.apple } else { tex.carrot }, (i * 256, j * 256), (#ffff));
+let tex_map: Array[Texture2D?] = [
+    nil,
+    tex.horse,
+    tex.apple,
+    tex.carrot,
+];
+
+class LevelElem {
+    var type: int = E_AIR;
+
+    fun draw(pos: vec2i) {
+        let tex = tex_map[type] else { return; };
+        
+        draw_texture(tex, pos, (#ffff));
+    }
+}
+
+class LevelGrid {
+    var objects: DynArray[LevelElem] = [];
+
+    var size: vec2i = (0, 0);
+
+    // BUG: calling this init() overwrites poni_init
+    fun initialize(size: vec2i) {
+        self.size = size;
+
+        // TODO: clear() fun on DynArray
+        objects = [];
+
+        for i in 0..size.x {
+            for j in 0..size.y {
+                objects.push(new LevelElem{});
+            }
         }
     }
 
+    fun get(pos: vec2i) -> LevelElem? {
+        if (pos.x < 0) or (pos.y < 0) {
+            return nil;
+        }
+        if (pos.x >= size.x) or (pos.y >= size.y) {
+            return nil;
+        }
 
-    
-    //pos += dt;
+        objects[pos.x * size.y + pos.y];
+    }
+
+    fun draw() {
+        var idx = 0;
+        for j in 0..size.y {
+            for i in 0..size.x {
+                objects[idx].draw((i * 256, j * 256));
+                idx += 1;
+            }
+        }
+    }
+}
+
+var grid: LevelGrid = new LevelGrid{};
+
+fun init_grid() {
+    grid.initialize((5, 5));
+
+    grid.get((3, 3)).or_panic().type = E_HORSE;
+    print(grid.get((3, 3)).or_panic().type);
+}
+
+var do_init_grid = true;
+fun update_dt(dt: float) {
+    if do_init_grid {
+        do_init_grid = false;
+        init_grid();
+    }
+
+    grid.draw();
 }
