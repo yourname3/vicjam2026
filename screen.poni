@@ -22,7 +22,7 @@ class Screen {
     }
 
     fun inverse_convert(x: vec2) -> vec2 {
-        ((x - offset) / scale) - (0.5 * target_size)
+        ((x - offset) / scale) - (0.5 * target_size) - target_offset
     }
 
     fun draw_bg() {
