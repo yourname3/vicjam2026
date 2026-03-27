@@ -14,23 +14,43 @@ class Button {
     var pos: vec2i;
 
     var hovered: bool = false;
+    var mouse_pressed_on: bool = false;
     var scale: float = 1.0;
+
+    var callback: fun();
 
     fun update(dt: float) {
         var mouse = screen.mouse();
         
         hovered = false;
+        var mouse_in_rect = in_rect(mouse, pos, (256, 256));
 
-        if in_rect(mouse, pos, (256, 256)) {
+        if mouse_in_rect {
             hovered = true;
         }
 
-        var target_scale = if hovered { 1.2 } else { 1.0 };
+        if hovered {
+            if is_mouse_button_down(MOUSE_LEFT) {
+                mouse_pressed_on = true;
+            }
+        }
+
+        if mouse_pressed_on and not is_mouse_button_down(MOUSE_LEFT) {
+            // Only call the callback if we're still on the button when we release it
+            if mouse_in_rect {
+                callback();
+            }
+
+            // Either way, we're no longer pressed on.
+            mouse_pressed_on = false;
+        }
+
+        var target_scale = if mouse_pressed_on { 0.9 } else { if hovered { 1.2 } else { 1.0 } };
         scale += (target_scale - scale) * 0.1;
     }
 
     fun draw() {
-        var brightness = if hovered { 1 } else { 0.92 };
+        var brightness = if mouse_pressed_on { 0.85 } else { if hovered { 1 } else { 0.92 } };
 
         draw_texture_rot_scale(tex, pos - (scale - 1.0) * 0.5 * (256, 256), 0.0, scale, (#ffff) * brightness);
     }
@@ -41,7 +61,11 @@ class Ui {
     var buttons = [
         new Button {
             tex: tex.add_horse,
-            pos: (0, 0)
+            pos: (0, 0),
+
+            callback: fun() {
+                print("button pressed!");
+            }
         }
     ];
 
