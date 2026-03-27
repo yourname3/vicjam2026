@@ -60,14 +60,74 @@ let tex_map: Array[Texture2D?] = [
     tex.carrot,
 ];
 
+let S_BLANK   = 0;
+let S_FORWARD = 1;
+let S_APPLE   = 2;
+let S_CARROT  = 3;
+
+/// Order of execution for the LevelElements (usually horses)
+var program_execution_order: DynArray[LevelElem] = [];
+
+class Program {
+    var steps: DynArray[int] = [];
+    var counter: int = 0;
+
+    fun step(target: LevelElem) {
+        var cur_step = steps[counter];
+        counter = (counter + 1) % steps.length;
+        
+        // if cur_step == S_BLANK { }
+        if cur_step == S_FORWARD { target.forward(); }
+        if cur_step == S_APPLE { target.eat_apple(); }
+        if cur_step == S_CARROT { target.eat_carrot(); }
+    }
+}
+
 class LevelElem {
     var type: int = E_AIR;
 
-    fun draw(pos: vec2i) {
+    var position: vec2i  = (0, 0);
+    var direction: vec2i = (1, 0);
+
+    var program: Program? = nil;
+
+    fun draw() {
         let tex = tex_map[type] else { return; };
         
-        draw_texture(tex, pos, (#ffff));
+        draw_texture(tex, position * 256, (#ffff));
     }
+
+    fun eat(target: int) {
+        //print("eat ", target);
+        var target_tile_pos = position + direction;
+        var target_tile = grid.get(target_tile_pos);
+        // Can't eat nil
+        let target_tile = target_tile else { return; };
+
+        if target_tile.type == target {
+            // Do we want an animation... O_O
+            target_tile.type = E_AIR;
+        }
+    }
+
+    fun can_move_into(tile: LevelElem?) -> bool {
+        let tile = tile else { return false; };
+
+        return tile.type == E_AIR;
+    }
+
+    fun forward() {
+        //print("forward");
+        var target_tile_pos = position + direction;
+        var target_tile = grid.get(target_tile_pos);
+
+        if can_move_into(target_tile) {
+            grid.swap(self, target_tile.or_panic());
+        }
+    }
+
+    fun eat_carrot() { eat(E_CARROT); }
+    fun eat_apple() { eat(E_APPLE); }
 }
 
 class LevelGrid {
@@ -84,9 +144,24 @@ class LevelGrid {
 
         for i in 0..size.x {
             for j in 0..size.y {
-                objects.push(new LevelElem{});
+                objects.push(new LevelElem{ position: (i, j) });
             }
         }
+    }
+
+    // BUG: self not captured in closure? Or something? This doesn't work as an inner function.
+    fun set(pos: vec2i, tile: LevelElem) {
+        // Don't update the position yet, so we can swap em.
+        objects[pos.x * size.y + pos.y] = tile;
+    }
+
+    fun swap(tile_a: LevelElem, tile_b: LevelElem) {
+        set(tile_a.position, tile_b);
+        set(tile_b.position, tile_a);
+
+        let tmp = tile_b.position;
+        tile_b.position = tile_a.position;
+        tile_a.position = tmp;
     }
 
     fun get(pos: vec2i) -> LevelElem? {
@@ -104,9 +179,29 @@ class LevelGrid {
         var idx = 0;
         for j in 0..size.y {
             for i in 0..size.x {
-                objects[idx].draw((i * 256, j * 256));
+                objects[idx].draw();
                 idx += 1;
             }
+        }
+    }
+
+    // fun tick_programs() {
+    //     var idx = 0;
+    //     for i in 0..size.y {
+    //         for j in 0..size.x {
+    //             let program = objects[idx].program else { idx += 1; continue; };
+
+    //             program.step(objects[idx]);
+
+    //             idx += 1;
+    //         }
+    //     }
+    // }
+
+    fun tick_programs() {
+        for i in 0..program_execution_order.length {
+            let p = program_execution_order[i].program else continue;
+            p.step(program_execution_order[i]);
         }
     }
 }
@@ -114,13 +209,26 @@ class LevelGrid {
 var grid: LevelGrid = new LevelGrid{};
 
 fun init_grid() {
-    grid.initialize((5, 5));
+    grid.initialize((9, 5));
 
-    grid.get((3, 3)).or_panic().type = E_HORSE;
+    var horse = grid.get((3, 3)).or_panic();
+
+    horse.type = E_HORSE;
+    horse.program = new Program {
+        steps: [S_CARROT, S_FORWARD, S_APPLE, S_FORWARD]
+    };
+    program_execution_order.push(horse);
+    
+    for i in 4..=8 {
+        grid.get((i, 3)).or_panic().type = if i % 2 == 0 { E_CARROT } else { E_APPLE };
+    }
     print(grid.get((3, 3)).or_panic().type);
 }
 
 var do_init_grid = true;
+
+var program_timer = 0.4;
+
 fun update_dt(dt: float) {
     if do_init_grid {
         do_init_grid = false;
@@ -128,4 +236,11 @@ fun update_dt(dt: float) {
     }
 
     grid.draw();
+
+    program_timer -= dt;
+    if program_timer < 0 {
+        grid.tick_programs();
+        program_timer += 0.4;
+        //print(program_timer);
+    }
 }
