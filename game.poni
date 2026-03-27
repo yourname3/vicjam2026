@@ -2,6 +2,7 @@ class Textures {
     let horse = load_texture("tex/horse.png");
     let apple = load_texture("tex/apple.png");
     let carrot = load_texture("tex/carrot.png");
+    let grass = load_texture("tex/grass.png");
 }
 
 let screen_size = (256 * 16, 256 * 12);
@@ -181,6 +182,13 @@ class LevelGrid {
     }
 
     fun draw() {
+
+        for i in 0..(1 + size.x) / 2 {
+            for j in 0..(1 + size.y) / 2 {
+                draw_texture(tex.grass, 2 * 256 * (i, j), (#ffff));
+            }
+        }
+
         var idx = 0;
         for j in 0..size.y {
             for i in 0..size.x {
