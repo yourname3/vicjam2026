@@ -83,6 +83,8 @@ class Program {
     }
 }
 
+var texture_rot_anim_timer = 0.15;
+
 class LevelElem {
     var type: int = E_AIR;
 
@@ -94,7 +96,10 @@ class LevelElem {
     fun draw() {
         let tex = tex_map[type] else { return; };
         
-        draw_texture(tex, position * 256, (#ffff));
+        let ROT_AMOUNT = 6.28 / 32.0;
+
+        var rot = if texture_rot_anim_timer < 0.0 { -ROT_AMOUNT } else { ROT_AMOUNT };
+        draw_texture_rot(tex, position * 256, rot, (#ffff));
     }
 
     fun eat(target: int) {
@@ -242,5 +247,10 @@ fun update_dt(dt: float) {
         grid.tick_programs();
         program_timer += 0.4;
         //print(program_timer);
+    }
+
+    texture_rot_anim_timer -= dt;
+    if texture_rot_anim_timer < -0.15 {
+        texture_rot_anim_timer += 0.3;
     }
 }
