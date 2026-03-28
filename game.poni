@@ -189,7 +189,7 @@ class PuzzleCamera {
         if panning {
             if not should_pan { panning = false; }
             else {
-                var delta = (screen.mouse() - pan_root);
+                var delta = (screen.mouse() - pan_root) / zoom;
                 pan_root = screen.mouse();
                 offset += delta;
             }
