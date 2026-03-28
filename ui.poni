@@ -119,20 +119,41 @@ class Ui {
                 0.0, wood_scale, (#ffff));
         }
 
-        var program_y = screen_size.y - 512;
+        var program_y: float = screen_size.y - 512;
+
+        // Instruction palette
+        draw_program_step(1, (20, program_y));
+        draw_program_step(2, (20 + 448 * PROGRAM_ROW_SCALE, program_y));
+        draw_program_step(3, (20, program_y + 320 * PROGRAM_ROW_SCALE));
+        //draw_program_step(4, (20 + 448 * PROGRAM_ROW_SCALE, program_y + 320 * PROGRAM_ROW_SCALE));
+
         for i in 0..program_execution_order.length {
             let program: Program = program_execution_order[i].program.or_panic();
             draw_program_row(program, program_y);
 
-            program_y += 140;
+            program_y += 320.0 * PROGRAM_ROW_SCALE;
         }
     }
 }
 
-fun draw_program_row(program: Program, start_y: float) {
-    let SCALE = 0.5;
+let PROGRAM_ROW_SCALE: float = 0.5;
+
+fun draw_program_step(step: int, location: vec2) {
+    let SCALE = PROGRAM_ROW_SCALE;
     let OFFSET_INSIDE_BG: vec2 = (32, 32);
     let ICON_OFFSET: vec2 = (123, 68);
+
+    draw_texture_rot_scale(tex.program_step, location + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff));
+
+    // Draw the step indicator
+    let tex = step_tex_map[step];
+    if tex.is_some() {
+        draw_texture_rot_scale(tex.or_panic(), location + ICON_OFFSET * SCALE, 0.0, SCALE * 0.7, (#ffff));
+    }
+}
+
+fun draw_program_row(program: Program, start_y: float) {
+    let SCALE = PROGRAM_ROW_SCALE;
 
     let START_X = 300;
 
@@ -144,15 +165,7 @@ fun draw_program_row(program: Program, start_y: float) {
         //if i < 5 { draw_texture_rot_scale(tex.program_step, (x, start_y) + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff)); }
 
         if i < program.steps.length {
-            let step = program.steps[i];
-
-            draw_texture_rot_scale(tex.program_step, (x, start_y) + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff));
-
-            // Draw the step indicator
-            let tex = step_tex_map[step];
-            if tex.is_some() {
-                draw_texture_rot_scale(tex.or_panic(), (x, start_y) + ICON_OFFSET * SCALE, 0.0, SCALE * 0.7, (#ffff));
-            }
+            draw_program_step(program.steps[i], (x, start_y));
         }
 
         x += 448 * SCALE;
