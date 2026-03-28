@@ -110,7 +110,7 @@ class LevelElem {
         let ROT_AMOUNT = 6.28 / 32.0;
 
         var rot = if texture_rot_anim_timer < 0.0 { -ROT_AMOUNT } else { ROT_AMOUNT };
-        draw_texture_rot(tex, position * 256, rot, (#ffff));
+        puzzle_camera.draw_tex_rot(tex, position * 256, rot, (#ffff));
     }
 
     fun eat(target: int) {
@@ -145,6 +145,51 @@ class LevelElem {
     fun eat_carrot() { eat(E_CARROT); }
     fun eat_apple() { eat(E_APPLE); }
 }
+
+class PuzzleCamera {
+    var zoom: float = 1.0;
+    var zoom_exp: float = 0.0; // zoom = 2^zoom_exp or something
+    var offset: vec2 = (0, 0);
+
+    var panning: bool = false;
+    var pan_root: vec2 = (0, 0);
+
+    // TODO: Let us refer to global namespace methods...
+    fun draw_tex_rot(texture: Texture2D, pos: vec2, rot: float, color: vec4) {
+        let pos = (pos + offset) * zoom;
+        draw_texture_rot_scale(texture, pos, rot, zoom, color);
+    }
+
+    fun draw_tex(texture: Texture2D, pos: vec2, color: vec4) {
+        draw_tex_rot(texture, pos, 0.0, color);
+    }
+
+    fun update(dt: float) {
+        var delta_y = mouse_wheel().y;
+
+        zoom_exp += delta_y * dt * 15.0;
+        zoom = pow(2.0, zoom_exp);
+
+        let should_pan = is_mouse_button_down(MOUSE_RIGHT) or is_mouse_button_down(MOUSE_MIDDLE);
+
+        if panning {
+            if not should_pan { panning = false; }
+            else {
+                var delta = (screen.mouse() - pan_root);
+                pan_root = screen.mouse();
+                offset += delta;
+            }
+        }
+        else {
+            if should_pan {
+                panning = true;
+                pan_root = screen.mouse();
+            }
+        }
+    }
+}
+
+let puzzle_camera = new PuzzleCamera{};
 
 class LevelGrid {
     var objects: DynArray[LevelElem] = [];
@@ -195,7 +240,7 @@ class LevelGrid {
 
         for i in 0..(1 + size.x) / 2 {
             for j in 0..(1 + size.y) / 2 {
-                draw_texture(tex.grass, 2 * 256 * (i, j), (#ffff));
+                puzzle_camera.draw_tex(tex.grass, 2 * 256 * (i, j), (#ffff));
             }
         }
 
@@ -261,6 +306,24 @@ var do_init_grid = true;
 
 var program_timer = 0.4;
 
+let MODE_EDIT = 0;
+let MODE_RUN  = 1;
+
+var mode = MODE_EDIT;
+
+fun update_run(dt: float) {
+
+}
+
+fun update_edit(dt: float) {
+    program_timer -= dt;
+    if program_timer < 0 {
+        grid.tick_programs();
+        program_timer += 0.4;
+        //print(program_timer);
+    }
+}
+
 fun update_dt(dt: float) {
     if do_init_grid {
         do_init_grid = false;
@@ -269,16 +332,20 @@ fun update_dt(dt: float) {
         ui.init_buttons();
     }
 
+    puzzle_camera.update(dt);
+
     grid.draw();
 
     ui.update(dt);
     ui.draw();
 
-    program_timer -= dt;
-    if program_timer < 0 {
-        grid.tick_programs();
-        program_timer += 0.4;
-        //print(program_timer);
+    
+
+    if mode == MODE_EDIT {
+        update_edit(dt);
+    }
+    if mode == MODE_RUN {
+        update_run(dt);
     }
 
     texture_rot_anim_timer -= dt;
