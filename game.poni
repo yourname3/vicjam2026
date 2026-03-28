@@ -58,7 +58,7 @@ let tex_map: Array[Texture2D?] = [
 
 let step_tex_map: Array[Texture2D?] = [
     nil,
-    nil,
+    tex.program_forward,
     tex.apple,
     tex.carrot,
 ];

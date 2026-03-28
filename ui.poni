@@ -155,11 +155,11 @@ fun draw_program_step(step: int, location: vec2) {
 fun draw_program_row(program: Program, start_y: float) {
     let SCALE = PROGRAM_ROW_SCALE;
 
-    let START_X = 300;
+    let START_X = 500;
 
     draw_texture_rot_scale(tex.horse, (START_X, start_y), 0.0, SCALE, (#ffff));
 
-    var x: float = START_X + 256;
+    var x: float = START_X + 268 * SCALE;
     for i in 0..20 {
         draw_texture_rot_scale(tex.program_step_bg, (x, start_y), 0.0, SCALE, (#ffff));
         //if i < 5 { draw_texture_rot_scale(tex.program_step, (x, start_y) + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff)); }
