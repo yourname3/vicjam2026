@@ -63,10 +63,18 @@ let S_CARROT  = 3;
 
 /// Order of execution for the LevelElements (usually horses)
 var program_execution_order: DynArray[LevelElem] = [];
+var program_execution_order_edited: DynArray[LevelElem] = [];
 
 class Program {
     var steps: DynArray[int] = [];
     var counter: int = 0;
+
+    fun clone() -> Program {
+        new Program {
+            steps: steps.clone_shallow(),
+            counter: counter,
+        }
+    }
 
     fun step(target: LevelElem) {
         if steps.length == 0 { return; }
@@ -90,6 +98,16 @@ class LevelElem {
     var direction: vec2i = (1, 0);
 
     var program: Program? = nil;
+
+    fun clone() -> LevelElem {
+        new LevelElem {
+            type: type,
+            position: position,
+            direction: direction,
+            
+            program: if program.is_some() { program.or_panic().clone() } else { nil }
+        }
+    }
 
     fun draw() {
         let tex = tex_map[type] else { return; };
@@ -191,6 +209,19 @@ class LevelGrid {
 
     var size: vec2i = (0, 0);
 
+    fun clone() -> LevelGrid {
+        let objs = objects.clone_shallow();
+
+        for i in 0..objs.length {
+            objs[i] = objs[i].clone();
+        }
+
+        new LevelGrid {
+            objects: objs,
+            size: size
+        }
+    }
+
     // BUG: calling this init() overwrites poni_init
     fun initialize(size: vec2i) {
         self.size = size;
@@ -270,6 +301,7 @@ class LevelGrid {
 }
 
 var grid: LevelGrid = new LevelGrid{};
+var grid_edited: LevelGrid = new LevelGrid{};
 
 fun place_horse_on(pos: vec2i) {
     var to_horse = grid.get(pos).or_panic();
@@ -277,6 +309,7 @@ fun place_horse_on(pos: vec2i) {
 
     to_horse.type = E_HORSE;
     to_horse.program = new Program{};
+
     program_execution_order.push(to_horse);
 }
 
@@ -295,6 +328,9 @@ fun init_grid() {
         grid.get((i, 3)).or_panic().type = if i % 2 == 0 { E_CARROT } else { E_APPLE };
     }
     print(grid.get((3, 3)).or_panic().type);
+
+    grid_edited = grid;
+    program_execution_order_edited = program_execution_order;
 }
 
 var do_init_grid = true;
@@ -305,6 +341,32 @@ let MODE_EDIT = 0;
 let MODE_RUN  = 1;
 
 var mode = MODE_EDIT;
+
+fun change_mode(new_mode: int) {
+    if(mode == new_mode) { return; }
+
+    mode = new_mode;
+    if mode == MODE_EDIT {
+        // TODO: Restore original level.
+        ui.play_stop_button.tex = tex.play;
+        // Point back at edited grid.
+        grid = grid_edited;
+        program_execution_order = program_execution_order_edited;
+    }
+
+    if mode == MODE_RUN {
+        grid = grid_edited.clone();
+
+        // To update program_execution_order, we must walk through the edited one and
+        // grab pointers based on position.
+        program_execution_order = [];
+        for i in 0..program_execution_order_edited.length {
+            program_execution_order.push(grid.get(program_execution_order_edited[i].position).or_panic());
+        }
+
+        ui.play_stop_button.tex = tex.stop;
+    }
+}
 
 fun update_run(dt: float) {
     program_timer -= dt;

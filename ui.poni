@@ -65,6 +65,16 @@ class Ui {
     //
     // Not sure the best way around that.
     fun init_buttons() {
+        play_stop_button = new Button {
+            tex: tex.play,
+            pos: (0, 256),
+
+            callback: fun() {
+                if mode == MODE_EDIT { change_mode(MODE_RUN); }
+                else { change_mode(MODE_EDIT); }
+            }
+        };
+
         buttons = [
             new Button {
                 tex: tex.add_horse,
@@ -82,11 +92,15 @@ class Ui {
                         }
                     }
                 }
-            }
+            },
+
+            play_stop_button,
         ];
     }
 
     var buttons: Array[Button] = [];
+    
+    var play_stop_button: Button = new Button { tex: tex.play, pos: (0, 0), callback: fun(){} };
 
     fun update(dt: float) {
         for i in 0..buttons.length {

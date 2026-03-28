@@ -7,4 +7,6 @@ class Textures {
     // Ui Textures
     let add_horse = load_texture("ui/add_horse.png");
     let cursor = load_texture("ui/cursor.png");
+    let play = load_texture("ui/play.png");
+    let stop = load_texture("ui/stop.png");
 }
