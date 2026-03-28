@@ -118,6 +118,44 @@ class Ui {
             draw_texture_rot_scale(tex.wood, (i * 1024 * wood_scale, screen_size.y - 256 * wood_scale),
                 0.0, wood_scale, (#ffff));
         }
+
+        var program_y = screen_size.y - 512;
+        for i in 0..program_execution_order.length {
+            let program: Program = program_execution_order[i].program.or_panic();
+            draw_program_row(program, program_y);
+
+            program_y += 140;
+        }
+    }
+}
+
+fun draw_program_row(program: Program, start_y: float) {
+    let SCALE = 0.5;
+    let OFFSET_INSIDE_BG: vec2 = (32, 32);
+    let ICON_OFFSET: vec2 = (123, 68);
+
+    let START_X = 300;
+
+    draw_texture_rot_scale(tex.horse, (START_X, start_y), 0.0, SCALE, (#ffff));
+
+    var x: float = START_X + 256;
+    for i in 0..20 {
+        draw_texture_rot_scale(tex.program_step_bg, (x, start_y), 0.0, SCALE, (#ffff));
+        //if i < 5 { draw_texture_rot_scale(tex.program_step, (x, start_y) + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff)); }
+
+        if i < program.steps.length {
+            let step = program.steps[i];
+
+            draw_texture_rot_scale(tex.program_step, (x, start_y) + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff));
+
+            // Draw the step indicator
+            let tex = step_tex_map[step];
+            if tex.is_some() {
+                draw_texture_rot_scale(tex.or_panic(), (x, start_y) + ICON_OFFSET * SCALE, 0.0, SCALE * 0.7, (#ffff));
+            }
+        }
+
+        x += 448 * SCALE;
     }
 
 }

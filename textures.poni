@@ -11,4 +11,7 @@ class Textures {
     let stop = load_texture("ui/stop.png");
 
     let wood = load_texture("ui/wood.png");
+
+    let program_step = load_texture("ui/program_step.png");
+    let program_step_bg = load_texture("ui/program_step_bg.png");
 }
