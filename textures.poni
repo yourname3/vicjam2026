@@ -9,4 +9,6 @@ class Textures {
     let cursor = load_texture("ui/cursor.png");
     let play = load_texture("ui/play.png");
     let stop = load_texture("ui/stop.png");
+
+    let wood = load_texture("ui/wood.png");
 }

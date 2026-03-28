@@ -112,6 +112,12 @@ class Ui {
         for i in 0..buttons.length {
             buttons[i].draw();
         }
+
+        for i in 0..2 {
+            let wood_scale = 2;
+            draw_texture_rot_scale(tex.wood, (i * 1024 * wood_scale, screen_size.y - 256 * wood_scale),
+                0.0, wood_scale, (#ffff));
+        }
     }
 
 }
