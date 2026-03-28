@@ -1,0 +1,10 @@
+class Textures {
+    let horse = load_texture("tex/horse.png");
+    let apple = load_texture("tex/apple.png");
+    let carrot = load_texture("tex/carrot.png");
+    let grass = load_texture("tex/grass.png");
+
+    // Ui Textures
+    let add_horse = load_texture("ui/add_horse.png");
+    let cursor = load_texture("ui/cursor.png");
+}

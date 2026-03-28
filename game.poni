@@ -1,20 +1,7 @@
-class Textures {
-    let horse = load_texture("tex/horse.png");
-    let apple = load_texture("tex/apple.png");
-    let carrot = load_texture("tex/carrot.png");
-    let grass = load_texture("tex/grass.png");
-
-    // Ui Textures
-    let add_horse = load_texture("ui/add_horse.png");
-}
-
-
-
 let screen_size = (256 * 16, 256 * 12);
 
 let tex = (new Textures{}, _init_flag).0;
 let ui = new Ui{};
-
 
 let screen = new Screen {
     target_size: screen_size,
@@ -154,6 +141,8 @@ class PuzzleCamera {
     var panning: bool = false;
     var pan_root: vec2 = (0, 0);
 
+    var cursor: vec2i = (0, 0);
+
     // TODO: Let us refer to global namespace methods...
     fun draw_tex_rot(texture: Texture2D, pos: vec2, rot: float, color: vec4) {
         let pos = (pos + offset) * zoom;
@@ -186,6 +175,12 @@ class PuzzleCamera {
                 pan_root = screen.mouse();
             }
         }
+
+        cursor = round2((((screen.mouse() / zoom) - offset) - (128, 128)) / 256);
+    }
+
+    fun draw_cursor() {
+        draw_tex(tex.cursor, cursor * 256, (#ffff));
     }
 }
 
@@ -312,16 +307,16 @@ let MODE_RUN  = 1;
 var mode = MODE_EDIT;
 
 fun update_run(dt: float) {
-
-}
-
-fun update_edit(dt: float) {
     program_timer -= dt;
     if program_timer < 0 {
         grid.tick_programs();
         program_timer += 0.4;
         //print(program_timer);
     }
+}
+
+fun update_edit(dt: float) {
+    
 }
 
 fun update_dt(dt: float) {
@@ -335,6 +330,8 @@ fun update_dt(dt: float) {
     puzzle_camera.update(dt);
 
     grid.draw();
+
+    puzzle_camera.draw_cursor();
 
     ui.update(dt);
     ui.draw();

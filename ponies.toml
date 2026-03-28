@@ -3,6 +3,7 @@ files = [
     "game.poni",
     "screen.poni",
     "ui.poni",
+    "textures.poni",
 ]
 imports = []
 kind = "Ponyquad"
