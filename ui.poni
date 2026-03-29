@@ -304,6 +304,7 @@ class Ui {
             }
 
             let brightness = if mouse_pressed_on { 0.80 } else { if hovered { 1 } else { 0.85 } };
+            // let brightness = lerp(lerp(0.85, 1, hovered), 0.80, mouse_pressed_on);
 
             var rotation = 0.0;
             if button.tex == tex.rotate_horse {
