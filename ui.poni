@@ -274,6 +274,8 @@ class Ui {
     fun do_row_buttons(start_y: float, y_idx: int, mouse: vec2) {
         var x = PROGRAM_ROW_BUTTON_X;
 
+        var callback_button: RowButton? = nil;
+
         for i in 0..ui_row_buttons.length {
             let button = ui_row_buttons[i];
 
@@ -296,7 +298,7 @@ class Ui {
             if mouse_pressed_on and is_mouse_button_released(MOUSE_LEFT) {
                 // Only call the callback if we're still on the button when we release it
                 if mouse_in_rect {
-                    button.callback(y_idx);
+                    callback_button = button; //button.callback(y_idx);
                 }
 
                 // Either way, we're no longer pressed on.
@@ -314,6 +316,12 @@ class Ui {
 
             draw_texture_rot_scale(button.tex, pos, rotation, PROGRAM_ROW_SCALE, (#ffff) * brightness);
             x += 256 * PROGRAM_ROW_SCALE;
+        }
+
+        if callback_button.is_some() {
+            let cb = callback_button.or_panic();
+
+            cb.callback(y_idx);
         }
     }
 
