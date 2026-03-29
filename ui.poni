@@ -58,6 +58,8 @@ class Button {
 
 class Ui {
 
+    var active_step: int = -1;
+
     // TODO:
     //
     // Initializing buttons at top level causes a variable init cycle.
@@ -119,12 +121,14 @@ class Ui {
                 0.0, wood_scale, (#ffff));
         }
 
-        var program_y: float = screen_size.y - 512;
+        var program_y: float = get_program_y();
 
         // Instruction palette
-        draw_program_step(1, (20, program_y));
-        draw_program_step(2, (20 + 448 * PROGRAM_ROW_SCALE, program_y));
-        draw_program_step(3, (20, program_y + 320 * PROGRAM_ROW_SCALE));
+        let mouse = screen.mouse();
+        do_program_palette(1, (20, program_y), mouse);
+        do_program_palette(2, (20 + 448 * PROGRAM_ROW_SCALE, program_y), mouse);
+        do_program_palette(3, (20, program_y + 320 * PROGRAM_ROW_SCALE), mouse);
+
         //draw_program_step(4, (20 + 448 * PROGRAM_ROW_SCALE, program_y + 320 * PROGRAM_ROW_SCALE));
 
         for i in 0..program_execution_order.length {
@@ -133,39 +137,82 @@ class Ui {
 
             program_y += 320.0 * PROGRAM_ROW_SCALE;
         }
+
+        if active_step >= 0 {
+            draw_program_step(active_step, mouse, (#ffff));
+        }
+    }
+
+    fun get_program_y() -> float {
+        screen_size.y - 512
+    }
+
+    fun do_program_palette(step: int, pos: vec2, mouse: vec2) {
+        var mouse_on = in_rect(mouse, pos, (448, 320) * PROGRAM_ROW_SCALE);
+
+        let color = if mouse_on { (#ffff) } else { (#ffff) * 0.94 };
+
+        draw_program_step(step, pos, color);
+
+        if (active_step == -1) and mouse_on and is_mouse_button_pressed(MOUSE_LEFT) {
+            active_step = step;
+        }
+
+        if (active_step >= 0) and is_mouse_button_released(MOUSE_LEFT) {
+            if mouse.x >= PROGRAM_ROW_START_X {
+                // Place the step into the given program.
+                var step_x: int = floor((mouse.x - PROGRAM_ROW_START_X) / (448 * PROGRAM_ROW_SCALE));
+                var horse : int = floor((mouse.y - get_program_y()) / (320 * PROGRAM_ROW_SCALE));
+
+                if horse < 0 { horse = 0; }
+                if horse >= program_execution_order.length { horse = program_execution_order.length - 1 }
+
+                // Can only do this if we actually have a horse.
+                if program_execution_order.length > 0 {
+                    let horse = program_execution_order[horse];
+                    let program = horse.program.or_panic();
+
+                    program.replace_step(step_x, active_step);
+                }
+            }
+
+            active_step = -1;
+        }
     }
 }
 
 let PROGRAM_ROW_SCALE: float = 0.5;
+let PROGRAM_ROW_HORSE_X: float = 500;
+let PROGRAM_ROW_START_X: float = PROGRAM_ROW_HORSE_X + 268 * PROGRAM_ROW_SCALE;
 
-fun draw_program_step(step: int, location: vec2) {
+fun draw_program_step(step: int, location: vec2, color: vec4) {
     let SCALE = PROGRAM_ROW_SCALE;
     let OFFSET_INSIDE_BG: vec2 = (32, 32);
     let ICON_OFFSET: vec2 = (123, 68);
 
-    draw_texture_rot_scale(tex.program_step, location + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff));
+    draw_texture_rot_scale(tex.program_step, location + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, color);
 
     // Draw the step indicator
     let tex = step_tex_map[step];
     if tex.is_some() {
-        draw_texture_rot_scale(tex.or_panic(), location + ICON_OFFSET * SCALE, 0.0, SCALE * 0.7, (#ffff));
+        draw_texture_rot_scale(tex.or_panic(), location + ICON_OFFSET * SCALE, 0.0, SCALE * 0.7, color);
     }
 }
 
 fun draw_program_row(program: Program, start_y: float) {
     let SCALE = PROGRAM_ROW_SCALE;
 
-    let START_X = 500;
+    draw_texture_rot_scale(tex.horse, (PROGRAM_ROW_HORSE_X, start_y), 0.0, SCALE, (#ffff));
 
-    draw_texture_rot_scale(tex.horse, (START_X, start_y), 0.0, SCALE, (#ffff));
-
-    var x: float = START_X + 268 * SCALE;
+    var x: float = PROGRAM_ROW_START_X;
     for i in 0..20 {
         draw_texture_rot_scale(tex.program_step_bg, (x, start_y), 0.0, SCALE, (#ffff));
         //if i < 5 { draw_texture_rot_scale(tex.program_step, (x, start_y) + OFFSET_INSIDE_BG * SCALE, 0.0, SCALE, (#ffff)); }
 
         if i < program.steps.length {
-            draw_program_step(program.steps[i], (x, start_y));
+            if program.steps[i] != S_BLANK {
+                draw_program_step(program.steps[i], (x, start_y), (#ffff));
+            }
         }
 
         x += 448 * SCALE;

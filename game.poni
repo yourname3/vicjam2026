@@ -94,6 +94,15 @@ class Program {
         if cur_step == S_APPLE { target.eat_apple(); }
         if cur_step == S_CARROT { target.eat_carrot(); }
     }
+
+    fun replace_step(idx: int, new_step: int) {
+        // TODO: Handle program offset?
+        while steps.length <= idx {
+            steps.push(S_BLANK);
+        }
+
+        steps[idx] = new_step;
+    }
 }
 
 var texture_rot_anim_timer = 0.15;
