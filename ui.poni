@@ -157,9 +157,20 @@ class Ui {
 
         // Instruction palette
         let mouse = screen.mouse();
-        do_program_palette(1, (20, program_y), mouse);
-        do_program_palette(2, (20 + 448 * PROGRAM_ROW_SCALE, program_y), mouse);
-        do_program_palette(3, (20, program_y + 320 * PROGRAM_ROW_SCALE), mouse);
+        let PAL_X_L: float = 20;
+        let PAL_X_H: float = PAL_X_L + 448 * PROGRAM_ROW_SCALE;
+
+        let PAL_ROW0: float = program_y;
+        let PAL_ROW1: float = PAL_ROW0 + 320 * PROGRAM_ROW_SCALE;
+        let PAL_ROW2: float = PAL_ROW1 + 320 * PROGRAM_ROW_SCALE;
+
+        do_program_palette(S_FORWARD, (PAL_X_L, PAL_ROW0), mouse);
+        
+        do_program_palette(S_CCW    , (PAL_X_L, PAL_ROW1), mouse);
+        do_program_palette(S_CW     , (PAL_X_H, PAL_ROW1), mouse);
+
+        do_program_palette(S_APPLE  , (PAL_X_L, PAL_ROW2), mouse);
+        do_program_palette(S_CARROT , (PAL_X_H, PAL_ROW2), mouse);
 
         //draw_program_step(4, (20 + 448 * PROGRAM_ROW_SCALE, program_y + 320 * PROGRAM_ROW_SCALE));
 

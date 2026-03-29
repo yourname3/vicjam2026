@@ -20,4 +20,6 @@ class Textures {
     let program_step_highlight = load_texture("ui/program_step_highlight.png");
 
     let program_forward = load_texture("ui/program_forward.png");
+    let program_cw = load_texture("ui/program_cw.png");
+    let program_ccw = load_texture("ui/program_ccw.png");
 }

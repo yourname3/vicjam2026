@@ -61,12 +61,16 @@ let step_tex_map: Array[Texture2D?] = [
     tex.program_forward,
     tex.apple,
     tex.carrot,
+    tex.program_ccw,
+    tex.program_cw,
 ];
 
 let S_BLANK   = 0;
 let S_FORWARD = 1;
 let S_APPLE   = 2;
 let S_CARROT  = 3;
+let S_CCW     = 4;
+let S_CW      = 5;
 
 /// Order of execution for the LevelElements (usually horses)
 var program_execution_order: DynArray[LevelElem] = [];
@@ -102,6 +106,8 @@ class Program {
         if cur_step == S_FORWARD { target.forward(); }
         if cur_step == S_APPLE { target.eat_apple(); }
         if cur_step == S_CARROT { target.eat_carrot(); }
+        if cur_step == S_CCW { target.rotate_ccw(); }
+        if cur_step == S_CW { target.rotate_cw(); }
 
         return true;
     }
@@ -219,6 +225,8 @@ class LevelElem {
     var position: vec2i  = (0, 0);
     var direction: vec2i = (1, 0);
 
+    var dir_angle: int = 0;
+
     var program: Program? = nil;
 
     fun clone() -> LevelElem {
@@ -237,6 +245,10 @@ class LevelElem {
         let ROT_AMOUNT = 6.28 / 32.0;
 
         var rot = if texture_rot_anim_timer < 0.0 { -ROT_AMOUNT } else { ROT_AMOUNT };
+
+        let dir_angle_f: float = dir_angle;
+        rot += (dir_angle_f * 6.28318530718 * 0.25);
+
         puzzle_camera.draw_tex_rot(tex, position * 256, rot, (#ffff));
     }
 
@@ -271,6 +283,23 @@ class LevelElem {
 
     fun eat_carrot() { eat(E_CARROT); }
     fun eat_apple() { eat(E_APPLE); }
+
+    fun convert_angle() {
+        if dir_angle == 0 { direction = (1, 0); }
+        if dir_angle == 1 { direction = (0, 1); }
+        if dir_angle == 2 { direction = (-1, 0); }
+        if dir_angle == 3 { direction = (0, -1); }
+    }
+
+    fun rotate_ccw() {
+        dir_angle = (dir_angle - 1) % 4;
+        convert_angle();
+    }
+
+    fun rotate_cw() {
+        dir_angle = (dir_angle + 1) % 4;
+        convert_angle();
+    }
 }
 
 class PuzzleCamera {
