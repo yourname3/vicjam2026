@@ -71,6 +71,7 @@ let S_CARROT  = 3;
 /// Order of execution for the LevelElements (usually horses)
 var program_execution_order: DynArray[LevelElem] = [];
 var program_execution_order_edited: DynArray[LevelElem] = [];
+var max_program_length: int = 0;
 
 class Program {
     var steps: DynArray[int] = [];
@@ -81,26 +82,33 @@ class Program {
     fun clone() -> Program {
         new Program {
             steps: steps.clone_shallow(),
-            counter: counter,
+            counter: -offset,
+            offset: offset,
         }
     }
 
-    fun step(target: LevelElem) {
-        if steps.length == 0 { return; }
+    fun step(target: LevelElem) -> bool {
+        if steps.length == 0 { return false; }
 
-        var cur_step = steps[counter];
-        counter = (counter + 1) % steps.length;
+        if counter < 0 {
+            counter += 1;
+            return false;
+        }
+
+        var cur_step = if counter < steps.length { steps[counter] } else { S_BLANK };
+        counter = (counter + 1) % max_program_length; // Everything cycles the same.
         
         // if cur_step == S_BLANK { }
         if cur_step == S_FORWARD { target.forward(); }
         if cur_step == S_APPLE { target.eat_apple(); }
         if cur_step == S_CARROT { target.eat_carrot(); }
+
+        return true;
     }
 
     fun pad_blanks_for_offset(idx: int) {
         // We need to pad blanks such that offset = idx
         let blanks = offset - idx;
-        print("add blanks = ", blanks);
         if blanks <= 0 { return; }
 
         // Push them to the end then shift the array forward
@@ -127,7 +135,6 @@ class Program {
             pad_blanks_for_offset(idx);
         }
         idx -= offset;
-        print(idx);
 
         while steps.length <= idx {
             steps.push(S_BLANK);
@@ -135,7 +142,7 @@ class Program {
 
         steps[idx] = new_step;
         // Not necessary?
-       // trim();
+        trim();
     }
 
     fun get(idx: int) -> (int, bool) {
@@ -188,7 +195,6 @@ class Program {
             if steps[i] == S_BLANK {
                 // Move offset forward
                 offset += 1;
-                print("cut step from beginning");
             }
             else {
                 // Otherwise, put it in the array and we're done.
@@ -408,12 +414,12 @@ class LevelGrid {
     //     }
     // }
 
-    fun tick_programs() {
-        for i in 0..program_execution_order.length {
-            let p = program_execution_order[i].program else continue;
-            p.step(program_execution_order[i]);
-        }
-    }
+    // fun tick_programs() {
+    //     for i in 0..program_execution_order.length {
+    //         let p = program_execution_order[i].program else continue;
+    //         p.step(program_execution_order[i]);
+    //     }
+    // }
 }
 
 var grid: LevelGrid = new LevelGrid{};
@@ -452,6 +458,7 @@ fun init_grid() {
 var do_init_grid = true;
 
 var program_timer = 0.4;
+var next_program_to_step: int = 0;
 
 let MODE_EDIT = 0;
 let MODE_RUN  = 1;
@@ -480,16 +487,43 @@ fun change_mode(new_mode: int) {
             program_execution_order.push(grid.get(program_execution_order_edited[i].position).or_panic());
         }
 
+        max_program_length = 0;
+        // Compute max program length
+        for i in 0..program_execution_order.length {
+            let elem = program_execution_order[i];
+            let program = elem.program.or_panic();
+            if program.steps.length > max_program_length { max_program_length = program.steps.length; }
+        }
+
         ui.play_stop_button.tex = tex.stop;
+
+        next_program_to_step = 0;
+        program_timer = STEP_TIME;
     }
 }
+
+let STEP_TIME: float = 0.4;
+
+var last_executed_program_step: vec2i = (0, 0);
 
 fun update_run(dt: float) {
     program_timer -= dt;
     if program_timer < 0 {
-        grid.tick_programs();
-        program_timer += 0.4;
-        //print(program_timer);
+        // Attempt 20 times to tick a real step. If we do tick
+        // a real step, set the program timer for next time.
+
+        for i in 0..20 {
+            let elem = program_execution_order[next_program_to_step];
+            last_executed_program_step.y = next_program_to_step;
+            next_program_to_step = (next_program_to_step + 1) % program_execution_order.length;
+
+            let program = elem.program.or_panic();
+            last_executed_program_step.x = program.counter + program.offset;
+            if program.step(elem) {
+                program_timer += STEP_TIME;
+                break;
+            }
+        }
     }
 }
 

@@ -17,6 +17,7 @@ class Textures {
 
     let program_step_left = load_texture("ui/program_step_left.png");
     let program_step_right = load_texture("ui/program_step_right.png");
+    let program_step_highlight = load_texture("ui/program_step_highlight.png");
 
     let program_forward = load_texture("ui/program_forward.png");
 }
