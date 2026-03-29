@@ -59,6 +59,7 @@ class Button {
 class Ui {
 
     var active_step: int = -1;
+    var active_horse: LevelElem? = nil;
 
     // TODO:
     //
@@ -104,9 +105,40 @@ class Ui {
     
     var play_stop_button: Button = new Button { tex: tex.play, pos: (0, 0), callback: fun(){} };
 
+    fun may_pick_new_object() -> bool {
+        (active_step == -1) and not active_horse.is_some()
+    }
+
     fun update(dt: float) {
         for i in 0..buttons.length {
             buttons[i].update(dt);
+        }
+
+        if may_pick_new_object() {
+            let elem = grid.get(puzzle_camera.cursor);
+            if elem.is_some() {
+                let elem = elem.or_panic();
+                if elem.type == E_HORSE {
+                    if is_mouse_button_pressed(MOUSE_LEFT) {
+                        active_horse = elem;
+                    }
+                }
+            }
+        }
+
+        if active_horse.is_some() {
+            let active_horse = active_horse.or_panic();
+            let target = grid.get(puzzle_camera.cursor);
+            if target.is_some() {
+                let target = target.or_panic();
+                if (target.type == E_AIR) or (target.type == E_HORSE) {
+                    grid.swap(target, active_horse);
+                }
+            }
+
+            if is_mouse_button_released(MOUSE_LEFT) {
+                self.active_horse = nil;
+            }
         }
     }
 
