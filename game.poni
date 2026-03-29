@@ -239,6 +239,11 @@ class LevelElem {
         }
     }
 
+    fun get_visual_rot() -> float {
+        let dir_angle_f: float = dir_angle;
+        (dir_angle_f * 6.28318530718 * 0.25)
+    }
+
     fun draw() {
         let tex = tex_map[type] else { return; };
         
@@ -246,8 +251,7 @@ class LevelElem {
 
         var rot = if mode == MODE_EDIT { 0 } else { if texture_rot_anim_timer < 0.0 { -ROT_AMOUNT } else { ROT_AMOUNT }; };
 
-        let dir_angle_f: float = dir_angle;
-        rot += (dir_angle_f * 6.28318530718 * 0.25);
+        rot += get_visual_rot();
 
         puzzle_camera.draw_tex_rot(tex, position * 256, rot, (#ffff));
     }

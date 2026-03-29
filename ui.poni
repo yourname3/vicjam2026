@@ -61,6 +61,8 @@ class Ui {
     var active_step: int = -1;
     var active_horse: LevelElem? = nil;
 
+    var active_row_button: vec2i = (-1, -1);
+
     // TODO:
     //
     // Initializing buttons at top level causes a variable init cycle.
@@ -269,10 +271,57 @@ class Ui {
         }
     }
 
+    fun do_row_buttons(start_y: float, y_idx: int, mouse: vec2) {
+        var x = PROGRAM_ROW_BUTTON_X;
+
+        for i in 0..ui_row_buttons.length {
+            let button = ui_row_buttons[i];
+
+            let pos = (x, start_y);
+            var mouse_in_rect = in_rect(mouse, pos, (255, 255) * PROGRAM_ROW_SCALE);
+
+            var hovered = false;
+
+            if mouse_in_rect {
+                hovered = true;
+            }
+
+            if hovered {
+                if is_mouse_button_pressed(MOUSE_LEFT) {
+                    active_row_button = (i, y_idx);
+                }
+            }
+
+            let mouse_pressed_on = (active_row_button.x == i) and (active_row_button.y == y_idx);
+            if mouse_pressed_on and is_mouse_button_released(MOUSE_LEFT) {
+                // Only call the callback if we're still on the button when we release it
+                if mouse_in_rect {
+                    button.callback(y_idx);
+                }
+
+                // Either way, we're no longer pressed on.
+                active_row_button = (-1, -1);
+            }
+
+            let brightness = if mouse_pressed_on { 0.80 } else { if hovered { 1 } else { 0.85 } };
+
+            var rotation = 0.0;
+            if button.tex == tex.rotate_horse {
+                // Use rotation of the horse.
+                rotation = program_execution_order[y_idx].get_visual_rot();
+            }
+
+            draw_texture_rot_scale(button.tex, pos, rotation, PROGRAM_ROW_SCALE, (#ffff) * brightness);
+            x += 256 * PROGRAM_ROW_SCALE;
+        }
+    }
+
     fun do_program_row(program: Program, start_y: float, y_idx: int, mouse: vec2) {
         let SCALE = PROGRAM_ROW_SCALE;
 
         draw_texture_rot_scale(tex.horse, (PROGRAM_ROW_HORSE_X, start_y), 0.0, SCALE, (#ffff));
+
+        do_row_buttons(start_y, y_idx, mouse);
 
         var x: float = PROGRAM_ROW_START_X;
         for i in 0..20 {
@@ -287,7 +336,70 @@ class Ui {
     }
 }
 
+class RowButton {
+    var tex: Texture2D;
+    var callback: fun(int);
+}
+
+fun swap_exec_order(idx1: int, idx2: int) {
+    var tmp = program_execution_order[idx1];
+    program_execution_order[idx1] = program_execution_order[idx2];
+    program_execution_order[idx2] = tmp;
+}
+
+let ui_row_buttons = [
+    new RowButton {
+        tex: tex.remove_horse,
+        callback: fun(y_idx: int) {
+            // Assume we're in mode edit and so should re-point both arrays.
+            //
+            // (Yet another reason a clear() function or something would be good).
+            if mode != MODE_EDIT { return; }
+
+            var horse = program_execution_order[y_idx];
+            var new_order: DynArray[LevelElem] = [];
+
+            for i in 0..program_execution_order.length {
+                if i != y_idx {
+                    new_order.push(program_execution_order[i]);
+                }
+            }
+
+            // Reset the level element.
+            horse.type = E_AIR;
+            horse.direction = (1, 0);
+            horse.dir_angle = 0;
+
+            program_execution_order = new_order;
+            program_execution_order_edited = new_order;
+        }
+    },
+    new RowButton {
+        tex: tex.up_horse,
+        callback: fun(y_idx: int) {
+            if y_idx > 0 {
+                swap_exec_order(y_idx - 1, y_idx);
+            }
+        }
+    },
+    new RowButton {
+        tex: tex.down_horse,
+        callback: fun(y_idx: int) {
+            if y_idx < program_execution_order.length - 1 {
+                swap_exec_order(y_idx + 1, y_idx);
+            }
+        }
+    },
+    new RowButton {
+        tex: tex.rotate_horse,
+        callback: fun(y_idx: int) {
+            program_execution_order[y_idx].rotate_cw();
+        }
+    },
+];
+
 let PROGRAM_ROW_SCALE: float = 0.5;
 let PROGRAM_ROW_HORSE_X: float = 500;
-let PROGRAM_ROW_START_X: float = PROGRAM_ROW_HORSE_X + 268 * PROGRAM_ROW_SCALE;
+let PROGRAM_ROW_BUTTON_X: float = PROGRAM_ROW_HORSE_X + 268 * PROGRAM_ROW_SCALE;
+let PROGRAM_ROW_START_X: float = PROGRAM_ROW_HORSE_X + (268 + 256 * 4) * PROGRAM_ROW_SCALE;
 

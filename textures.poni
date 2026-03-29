@@ -22,4 +22,9 @@ class Textures {
     let program_forward = load_texture("ui/program_forward.png");
     let program_cw = load_texture("ui/program_cw.png");
     let program_ccw = load_texture("ui/program_ccw.png");
+
+    let remove_horse = load_texture("ui/remove_horse.png");
+    let rotate_horse = load_texture("ui/rotate_horse.png");
+    let up_horse = load_texture("ui/horse_up.png");
+    let down_horse = load_texture("ui/down_horse.png");
 }
