@@ -244,7 +244,7 @@ class LevelElem {
         
         let ROT_AMOUNT = 6.28 / 32.0;
 
-        var rot = if texture_rot_anim_timer < 0.0 { -ROT_AMOUNT } else { ROT_AMOUNT };
+        var rot = if mode == MODE_EDIT { 0 } else { if texture_rot_anim_timer < 0.0 { -ROT_AMOUNT } else { ROT_AMOUNT }; };
 
         let dir_angle_f: float = dir_angle;
         rot += (dir_angle_f * 6.28318530718 * 0.25);
