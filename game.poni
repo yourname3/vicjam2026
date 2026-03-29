@@ -558,11 +558,26 @@ fun update_run(dt: float) {
             }
         }
     }
+
+    var uneaten_count = 0;
+    for i in 0..grid.objects.length {
+        let obj = grid.objects[i];
+        let obj = obj.type;
+        if (obj == E_APPLE) or (obj == E_CARROT) {
+            uneaten_count += 1;
+        }
+    }
+
+    if (mode == MODE_RUN) and (uneaten_count == 0) {
+        draw_text_font("Level Complete!", FONT, (1100, 700), 256, (#ffff));
+    }
 }
 
 fun update_edit(dt: float) {
     
 }
+
+let FONT = load_font("font/Leorio.ttf");
 
 fun update_dt(dt: float) {
     if do_init_grid {
@@ -580,8 +595,6 @@ fun update_dt(dt: float) {
 
     ui.update(dt);
     ui.draw();
-
-    
 
     if mode == MODE_EDIT {
         update_edit(dt);
