@@ -76,6 +76,8 @@ class Program {
     var steps: DynArray[int] = [];
     var counter: int = 0;
 
+    var offset: int = 0;
+
     fun clone() -> Program {
         new Program {
             steps: steps.clone_shallow(),
@@ -95,13 +97,111 @@ class Program {
         if cur_step == S_CARROT { target.eat_carrot(); }
     }
 
+    fun pad_blanks_for_offset(idx: int) {
+        // We need to pad blanks such that offset = idx
+        let blanks = offset - idx;
+        print("add blanks = ", blanks);
+        if blanks <= 0 { return; }
+
+        // Push them to the end then shift the array forward
+        for i in 0..blanks {
+            steps.push(S_BLANK);
+        }
+
+        for i in 0..steps.length - blanks {
+            let j = steps.length - i - 1;
+            steps[j] = steps[j - blanks];
+        }
+
+        // Now rewrite the beginning with blanks
+        for i in 0..blanks {
+            steps[i] = S_BLANK;
+        }
+
+        offset = idx;
+    }
+
     fun replace_step(idx: int, new_step: int) {
-        // TODO: Handle program offset?
+        if idx < offset {
+            // Index becomes new offset.
+            pad_blanks_for_offset(idx);
+        }
+        idx -= offset;
+        print(idx);
+
         while steps.length <= idx {
             steps.push(S_BLANK);
         }
 
         steps[idx] = new_step;
+        // Not necessary?
+       // trim();
+    }
+
+    fun get(idx: int) -> (int, bool) {
+        idx -= offset;
+        if idx < 0 { return (0, false); }
+        if idx >= steps.length { return (0, false); }
+
+        return (steps[idx], true);
+    }
+
+    fun remove(idx: int) {
+        idx -= offset;
+
+        if idx < 0 { return; }
+        if idx >= steps.length { return; }
+
+        steps[idx] = S_BLANK;
+        trim();
+    }
+
+    /// -1 for left, 1 for right, 0 for normal.
+    fun get_step_boundary_kind(idx: int) -> int {
+        if steps.length == 0 { return 0; }
+
+        if idx == offset { return -1; }
+        if idx == (offset + steps.length - 1) { return 1; }
+
+        return 0;
+    }
+
+    fun trim() {
+        if steps.length == 0 { return; }
+        // No pop means we have to rebuild array from scratch. So, avoid that sometimes.
+        if (steps[steps.length - 1] != S_BLANK) and (steps[0] != S_BLANK) { return; }
+
+        var cut_at_end = 0;
+
+        // Figure out how many steps to skip at the end.
+        for i in 0..steps.length {
+            let i = steps.length - i - 1;
+            if steps[i] != S_BLANK { break; }
+
+            cut_at_end += 1;
+        }
+
+        var new_steps: DynArray[int] = [];
+        var idx = 0;
+        for i in 0..steps.length {
+            idx += 1;
+            if steps[i] == S_BLANK {
+                // Move offset forward
+                offset += 1;
+                print("cut step from beginning");
+            }
+            else {
+                // Otherwise, put it in the array and we're done.
+                new_steps.push(steps[i]);
+                break;
+            }
+        }
+
+        for i in idx..steps.length - cut_at_end {
+            new_steps.push(steps[i]);
+        }
+
+        steps = new_steps;
     }
 }
 
